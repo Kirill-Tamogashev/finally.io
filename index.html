@@ -1,0 +1,407 @@
+<html>
+<meta charset="utf-8">
+
+<!-- Background theme -->
+<!-- <div id="background"> -->
+    <!-- <div class="bg1"></div> -->
+    <!-- <div class="bg2"></div> -->
+    <!-- <img src="img/logo.svg" alt="ci_logo"><img> -->
+    <!-- <div class="bg3"></div> -->
+    <!-- <div class="bg4"></div> -->
+<!-- </div> -->
+
+
+<head>
+  <title> FINALLY demo page </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:100,300,400,700,900&display=swap&subset=korean"
+  rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- <link rel="shortcut icon" href="../../images/nc.png"> -->
+</head>
+
+<br>
+
+<div id="gvc_header" class="container">
+  <h4 style="font-weight: bold;"> FINALLY: fast and universal speech enhancement with studio-like quality </h4>
+</div>
+
+<div id="gvc_header" class="container">
+    <br><h5 style="font-weight: bold;">Contents</h5><br>
+      <ol type="1">
+        <li><a href="#abs">Abstract</a></li>
+        <li><a href="#arch">Architecture</a></li>
+        <li><a href="#demo">Real data demo</a></li>
+        <li><a href="#comp">Comparison with other methods</a></li>
+        <li><a href="#clust">Examples of clusters obtained during LMOS studies</a></li>
+      </ol>
+      <br>
+      <button id="nav_button" onclick="move_to_start()"> <i class="arrow up"></i> </button>
+  </div>
+
+<hr color="gray" size="1px"></hr>
+
+<div id="abs" class="container">    
+  <div id="gvc_header" class="container">
+      <br><h5 style="font-weight: bold;">Abstract</h5><br>
+      <div style="width: 100%">
+          In this paper, we address the challenge of speech enhancement in real-world recordings, which often contain various forms of distortion, such as background noise, reverberation, and microphone artifacts.
+  We revisit the use of Generative Adversarial Networks (GANs) for speech enhancement and theoretically show that GANs are naturally inclined to seek the point of maximum density within the conditional clean speech distribution, which, as we argue, is essential for speech enhancement task.
+  We study various feature extractors for perceptual loss to facilitate the stability of adversarial training, developing a methodology for probing the structure of the feature space.
+  This leads us to integrate WavLM-based perceptual loss into MS-STFT adversarial training pipeline, creating an effective and stable training procedure for the speech enhancement model.
+  The resulting speech enhancement model, which we refer to as FINALLY, builds upon the HiFi++ architecture, augmented with a WavLM encoder and a novel training pipeline.
+  Empirical results on various datasets confirm our model's ability to produce clear, high-quality speech at 48 kHz, achieving state-of-the-art performance in the field of speech enhancement.
+      </div>
+      <br>
+  </div>
+</div>
+
+<hr color="gray" size="1px"></hr>
+
+<div id="arch" class="container">  
+  <div id="gvc_header" class="container">
+    <br><h5 style="font-weight: bold;">Architecture</h5><br>
+    <img align="center" src="img/architecture.png";
+        class="illustration"
+        onclick="zoom(this)"/>
+    <br>
+    <br>
+    <div style="width: 100%">
+        The model is a six-component neural network consisting of WavLM-large, SpectralUNet, Upsampler, WaveUNet, SpectralMaskNet and the Upsample WaveUNet modules. 
+        SpectralUNet is responsible for initial preprocessing of audio in the spectral domain using two-dimensional convolutions.
+        Additionaly, the SSL features, obtained from WavLM-large, are added to spectral ones.
+        The Upsampler is a HiFi-GAN generator-based module that increases the temporal resolution of the input tensor, mapping it to the waveform domain.
+        WaveUNet performs post-processing in the waveform domain and improves the output of the Upsampler by incorporating phase information gleaned directly from the raw input waveform.
+        SpectralMaskNet is applied to perform spectrum-based post-processing and thus, remove any possible artifacts that remained after WaveUNet.
+        Thus, the model alternates between time and frequency domains, allowing for effective audio restoration.
+        Finally, the Upsample WaveUNet is a learnable upsampler of the signal sampling rate, consisting of the WaveUNet with an additional convolutional upsampling block in the decoder that upsamples the temporal resolution by 3 times.
+    </div>
+    <br>    
+  </div>
+</div>
+
+<hr color="gray" size="1px"></hr>
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready( function() {
+
+$("#index").load("index.html");
+
+});
+</script>
+
+<div id="demo" class="container">
+  <div id="gvc_header" class="container">
+  <br><h5 style="font-weight: bold;">Real data demo</h5><br>
+      <div style="width: 100%">
+        The model is designed to solve the universal speech enhancement problem and, hence, is capable of tackling diverse distortions types.
+      </div>
+      <!-- <h6><span style="color:red">RED</span>: Artifacts due to inaccurate harmonic components</h6>
+      <h6><span style="color:blue">BLUE</span>: Artifacts at high frequency due to imaging artifacts</h6> -->
+      <table>
+        <tr>
+          <td style="text-align: center; width: 50%;">Input</td>
+          <td style="text-align: center; width: 50%;">Output</td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><img align="center" src="img/real_data_input_0.png" class="illustration" onclick="zoom(this)"/></td>
+          <td style="text-align: center; width: 25%;"><img align="center" src="img/real_data_output_0.png" class="illustration" onclick="zoom(this)"/></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 50%;"><audio controls style="width: 50%;"><source src="samples/real_data/input/0.wav"></audio></td>
+          <td style="text-align: center; width: 50%;"><audio controls style="width: 50%;"><source src="samples/real_data/output/0.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><img align="center" src="img/real_data_input_1.png" class="illustration" onclick="zoom(this)"/></td>
+          <td style="text-align: center; width: 25%;"><img align="center" src="img/real_data_output_1.png" class="illustration" onclick="zoom(this)"/></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 50%;"><audio controls style="width: 50%;"><source src="samples/real_data/input/1.wav"></audio></td>
+          <td style="text-align: center; width: 50%;"><audio controls style="width: 50%;"><source src="samples/real_data/output/1.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><img align="center" src="img/real_data_input_2.png" class="illustration" onclick="zoom(this)"/></td>
+          <td style="text-align: center; width: 25%;"><img align="center" src="img/real_data_output_2.png" class="illustration" onclick="zoom(this)"/></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 50%;"><audio controls style="width: 50%;"><source src="samples/real_data/input/2.wav"></audio></td>
+          <td style="text-align: center; width: 50%;"><audio controls style="width: 50%;"><source src="samples/real_data/output/2.wav"></audio></td>
+        </tr>
+        </tr>
+      </table>
+      <br>
+    </div>
+  </div>
+</div>
+
+<hr color="gray" size="1px"></hr>
+
+<div id="comp" class="container">
+  <br><h5 style="font-weight: bold;">Comparison with other methods</h5><br>
+
+  <br><h6 style="font-weight: bold;">Comparison with diffusion</h6><br>
+
+  <div id="gvc_header" class="container">
+    <div style="width: 100%">
+      As it can be seen, diffusion model hallucinates when the input is significantly degraded, our model, on countrary, provides more precise content restoration, sometimes slightly sacrificing perceptual quality, and, subsequently, achieving better enhancement quality.
+    </div>
+  </div>
+
+  <table style="width: 200%;">
+    <tr>
+      <td style="text-align: center; width: 25%;">Input</td>
+      <td style="text-align: center; width: 25%;">UNIVERSE</td>
+      <td style="text-align: center; width: 25%;">Ours</td>
+      <td style="text-align: center; width: 25%;">Ground truth</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0015_input.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0015_universe.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0015_ours.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0015_gt.png" class="illustration" onclick="zoom(this)"/></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0015.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0015.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0015.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0015.wav"></audio></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0090_input.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0090_universe.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0090_ours.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0090_gt.png" class="illustration" onclick="zoom(this)"/></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0090.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0090.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0090.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0090.wav"></audio></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0061_input.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0061_universe.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0061_ours.png" class="illustration" onclick="zoom(this)"/></td>
+      <td style="text-align: center; width: 25%;"><img align="center" src="img/0061_gt.png" class="illustration" onclick="zoom(this)"/></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0061.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0061.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0061.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0061.wav"></audio></td>
+    </tr>
+  </table>
+
+  <br>
+
+  <br><h6 style="font-weight: bold;">All example samples</h6><br>
+
+  <button class="tablink" onclick="openPage('universe', this,)" id="defaultOpen">UNIVERSE</button>
+  <button class="tablink" onclick="openPage('hifigan2', this,)">HIFI-GAN-2</button>
+
+
+  <div id="universe" class="tabcontent">
+      <table style="width: 200%;">
+        <tr>
+          <td style="text-align: center; width: 25%;">Input</td>
+          <td style="text-align: center; width: 25%;">UNIVERSE</td>
+          <td style="text-align: center; width: 25%;">Ours</td>
+          <td style="text-align: center; width: 25%;">Ground truth</td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0098.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0098.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0098.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0098.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0096.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0096.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0096.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0096.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0095.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0095.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0095.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0095.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0090.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0090.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0090.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0090.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0083.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0083.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0083.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0083.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0076.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0076.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0076.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0076.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0065.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0065.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0065.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0065.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0061.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0061.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0061.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0061.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0060.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0060.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0060.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0060.wav"></audio></td>
+        </tr>
+        <tr>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/input/0034.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/universe/0034.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/ours/0034.wav"></audio></td>
+          <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_universe/gt/0034.wav"></audio></td>
+        </tr>
+      </table>
+      <br>
+  </div>
+
+  <div id="hifigan2" class="tabcontent" >
+    <table style="width: 200%;">
+      <tr>
+        <td style="text-align: center; width: 33%;">Input</td>
+        <td style="text-align: center; width: 33%;">HIFI-GAN-2</td>
+        <td style="text-align: center; width: 33%;">Ours</td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/f75.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/f75.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/f75.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/f81.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/f81.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/f81.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/f82.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/f82.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/f82.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/f88.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/f88.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/f88.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/m76.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/m76.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/m76.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/m77.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/m77.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/m77.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/m80.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/m80.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/m80.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/m81.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/m81.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/m81.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/m83.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/m83.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/m83.wav"></audio></td>
+      </tr>
+      <tr>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/input/m98.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/hifigan2/m98.wav"></audio></td>
+        <td style="text-align: center; width: 33%;"><audio controls style="width: 50%;"><source src="samples/ours_vs_hifigan2/ours/m98.wav"></audio></td>
+      </tr>
+    </table>
+    <br>
+  </div>
+
+</div>
+
+<hr color="gray" size="1px"></hr>
+
+<div id="clust" class="container">
+  <div id="gvc_header" class="container">
+  <br><h5 style="font-weight: bold;">Examples of clusters obtained during LMOS studies</h5><br>
+
+  <div id="gvc_header" class="container">
+    <div style="width: 100%">
+      As we mentioned in our paper, we generated clusters with the help of VITS. In this part we provide the examples of different clusters. As it can be heard, the diversity of samples from one cluster is not caused by the phrase, speaker or phoneme duration mismatch. WavLM tends to preserve this structure whilst the L2- space, for instance, usually not.
+    </div>
+  </div>
+
+  <table style="width: 200%;">
+    <tr>
+      <td style="text-align: center; width: 25%;">Cluster 1</td>
+      <td style="text-align: center; width: 25%;">Cluster 2</td>
+      <td style="text-align: center; width: 25%;">Cluster 3</td>
+      <td style="text-align: center; width: 25%;">Cluster 4</td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_005-8/0.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_009-44/0.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_024-62/0.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_044-27/0.wav"></audio></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_005-8/1.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_009-44/1.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_024-62/1.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_044-27/1.wav"></audio></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_005-8/2.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_009-44/2.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_024-62/2.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_044-27/2.wav"></audio></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_005-8/3.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_009-44/3.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_024-62/3.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_044-27/3.wav"></audio></td>
+    </tr>
+    <tr>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_005-8/4.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_009-44/4.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_024-62/4.wav"></audio></td>
+      <td style="text-align: center; width: 25%;"><audio controls style="width: 50%;"><source src="samples/clusters/p226_044-27/4.wav"></audio></td>
+    </tr>
+
+  </table>
+
+  <br>
+  </div>
+</div>
+
+<hr color="gray" size="1px"></hr>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/script.js"></script>
+<script src="js/tab.js"></script>
+<script src="js/nav_menu.js"></script>
+<script src="js/image.js"></script>
+
+</html>
